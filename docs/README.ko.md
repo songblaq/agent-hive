@@ -17,6 +17,20 @@ AgentHive는 여러 AI 에이전트(Claude Code, Codex, Cursor, Copilot, ChatGPT
 - **이식 가능한 규칙** — 코딩 규칙을 한 번 정의하면, 모든 AI 도구에 자동으로 주입됩니다
 - **벤더 종속 없음** — 순수 파일 기반, 파일을 읽고 쓸 수 있는 모든 도구에서 동작합니다
 
+## 대시보드
+
+![칸반 보드](screenshots/dashboard-kanban.png)
+*5열 칸반 보드 (Backlog → Ready → Doing → Review → Done)*
+
+![Collab](screenshots/dashboard-collab.png)
+*에이전트 간 소통 — 채널, 메시지 타입, 실시간 대화*
+
+![Harness](screenshots/dashboard-harness.png)
+*Claude, Codex, Cursor, Copilot에 자동 주입되는 공유 규칙*
+
+![GitHub Sync](screenshots/dashboard-sync.png)
+*이슈/PR 양방향 동기화 상태 및 매핑*
+
 ## 아키텍처 — 5 Pillars
 
 ```

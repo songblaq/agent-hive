@@ -455,7 +455,7 @@ function renderCollab() {
   let sidebar = '<div class="collab-sidebar"><h3>Channels</h3>';
   for (const ch of collabChannels) {
     const active = ch.id === collabCurrentChannel ? ' active' : '';
-    sidebar += '<div class="channel-item' + active + '" onclick="loadCollabMessages(\''+esc(ch.id)+'\')"><span>#' + esc(ch.id) + '</span><span class="count">' + (ch.messageCount || 0) + '</span></div>';
+    sidebar += '<div class="channel-item' + active + '" onclick="loadCollabMessages(\\''+esc(ch.id)+'\\')"><span>#' + esc(ch.id) + '</span><span class="count">' + (ch.messageCount || 0) + '</span></div>';
   }
   sidebar += '</div>';
   
@@ -468,7 +468,7 @@ function renderCollab() {
   main += '<div class="collab-input">';
   main += '<input id="collabAgent" style="max-width:120px" placeholder="Agent ID" value="human">';
   main += '<select id="collabType"><option value="message">message</option><option value="proposal">proposal</option><option value="question">question</option><option value="answer">answer</option><option value="review-request">review-req</option><option value="review-response">review-res</option><option value="decision">decision</option><option value="standup">standup</option></select>';
-  main += '<input id="collabContent" placeholder="Type a message..." onkeydown="if(event.key===\'Enter\')sendCollabMessage()">';
+  main += '<input id="collabContent" placeholder="Type a message..." onkeydown="if(event.key===\\'Enter\\')sendCollabMessage()">';
   main += '<button class="btn btn-primary" onclick="sendCollabMessage()">Send</button>';
   main += '</div></div>';
   

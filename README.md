@@ -15,6 +15,20 @@ Most AI tools work in isolation. When you switch between Claude Code, Cursor, an
 - **Portable conventions** — Define your coding standards once, inject them into every AI tool automatically
 - **No vendor lock-in** — Pure files, works with any tool that can read/write to disk
 
+## Dashboard
+
+![Kanban Board](docs/screenshots/dashboard-kanban.png)
+*Kanban board with 5-column task lifecycle (Backlog → Ready → Doing → Review → Done)*
+
+![Collab](docs/screenshots/dashboard-collab.png)
+*Agent-to-agent communication — channels, message types, and real-time discussion*
+
+![Harness](docs/screenshots/dashboard-harness.png)
+*Shared conventions injected into Claude, Codex, Cursor, and Copilot*
+
+![GitHub Sync](docs/screenshots/dashboard-sync.png)
+*Bidirectional issue/PR synchronization status and mappings*
+
 ## Architecture — 5 Pillars
 
 ```

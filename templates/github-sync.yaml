@@ -1,0 +1,25 @@
+version: "1.0"
+enabled: true
+repo: ""
+auth: "gh-cli"
+sync_mode: "import-only"
+import:
+  issues:
+    enabled: true
+    filter:
+      labels: []
+      exclude_labels:
+        - wontfix
+        - question
+      state: "open"
+    auto_status: "backlog"
+  pull_requests:
+    enabled: true
+    link_to_tasks: true
+export:
+  labels:
+    enabled: false
+    prefix: "hive:"
+  comments:
+    enabled: false
+    on_status_change: false

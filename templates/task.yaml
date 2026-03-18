@@ -1,0 +1,20 @@
+id: ""
+title: ""
+category: ""
+tags: []
+workflow_mode: pipeline
+status: backlog
+priority: medium
+owner: null
+role: null
+created_by: ""
+created_at: ""
+scope:
+  path: "/"
+  files: []
+  not_touch: []
+acceptance: []
+branch: null
+handoff:
+  next_role: reviewer
+  next_agent: null

@@ -1,0 +1,32 @@
+{
+  "name": "agenthive",
+  "version": "0.1.0",
+  "description": "File-based multi-agent collaboration protocol and CLI",
+  "type": "module",
+  "bin": {
+    "agenthive": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "tsc --noEmit",
+    "start": "node dist/index.js"
+  },
+  "keywords": ["agent", "collaboration", "multi-agent", "cli", "protocol"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.0.0",
+    "@types/node": "^22.0.0"
+  }
+}

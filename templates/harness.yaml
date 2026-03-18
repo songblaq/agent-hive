@@ -1,0 +1,13 @@
+version: "1.0"
+name: ""
+description: ""
+extends: []
+conventions: []
+prompts: {}
+skills: []
+knowledge: []
+inject_into:
+  claude: true
+  codex: true
+  cursor: true
+  copilot: true

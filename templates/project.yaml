@@ -1,0 +1,16 @@
+id: ""
+name: ""
+description: ""
+slug: ""
+paths: []
+git:
+  remote: null
+  default_branch: "main"
+branching:
+  pattern: "agent/{agent-id}/{task-id}"
+  base: "main"
+review:
+  max_rounds: 2
+  require_test_pass: true
+active_agents: []
+created_at: ""

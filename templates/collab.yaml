@@ -1,0 +1,9 @@
+version: "1.0"
+channels:
+  - id: general
+    description: "General project discussion"
+    visibility: all
+rules:
+  max_message_size: 4096
+  require_type: false
+  auto_archive_days: 30

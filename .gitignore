@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OMC/OMX state (session-specific)
+.omc/
+.omx/
+
+# Generated pointer/instruction files
+.agenthive.pointer.yaml
+CLAUDE.md
+AGENTS.md
+AGENTHIVE.md
+copilot-instructions.md
+
+# Test coverage
+coverage/
+
+# Logs
+*.log

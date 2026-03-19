@@ -34,3 +34,7 @@ coverage/
 
 # Logs
 *.log
+
+# Machine-generated (agenthive setup)
+CLAUDE.md
+.agenthive.pointer.yaml

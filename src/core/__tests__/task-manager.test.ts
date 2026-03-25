@@ -114,7 +114,7 @@ describe("task lifecycle", () => {
     it("rejects claim on done task", async () => {
       await createTask(projectHubPath, { title: "Done task" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      await completeTask(projectHubPath, "TASK-001");
+      await completeTask(projectHubPath, "TASK-001", "done", "claude-code");
       const result = await claimTask(projectHubPath, "TASK-001", "codex");
 
       expect(result.success).toBe(false);
@@ -165,7 +165,7 @@ describe("task lifecycle", () => {
     it("marks task as done and removes lock", async () => {
       const t = await createTask(projectHubPath, { title: "Complete me" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      const result = await completeTask(projectHubPath, "TASK-001");
+      const result = await completeTask(projectHubPath, "TASK-001", "done", "claude-code");
 
       expect(result.success).toBe(true);
       expect(existsSync(join(t.taskDir, "lock.yaml"))).toBe(false);
@@ -179,7 +179,7 @@ describe("task lifecycle", () => {
     it("can set to review instead of done", async () => {
       const t = await createTask(projectHubPath, { title: "Review me" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      await completeTask(projectHubPath, "TASK-001", "review");
+      await completeTask(projectHubPath, "TASK-001", "review", "claude-code");
 
       const raw = await readFile(join(t.taskDir, "task.yaml"), "utf-8");
       const task = parse(raw);
@@ -189,10 +189,30 @@ describe("task lifecycle", () => {
     it("rejects invalid status", async () => {
       await createTask(projectHubPath, { title: "Invalid status" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      const result = await completeTask(projectHubPath, "TASK-001", "nonsense" as any);
+      const result = await completeTask(projectHubPath, "TASK-001", "nonsense" as any, "claude-code");
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Invalid transition");
+    });
+
+    it("rejects complete from doing when agent is not the lock holder", async () => {
+      await createTask(projectHubPath, { title: "Lock holder check" });
+      await claimTask(projectHubPath, "TASK-001", "claude-code");
+      const result = await completeTask(projectHubPath, "TASK-001", "done", "codex");
+
+      expect(result.success).toBe(false);
+      expect(result.forbidden).toBe(true);
+      expect(result.message).toContain("locked by");
+    });
+
+    it("rejects complete from doing without agent", async () => {
+      await createTask(projectHubPath, { title: "Agent required" });
+      await claimTask(projectHubPath, "TASK-001", "claude-code");
+      const result = await completeTask(projectHubPath, "TASK-001", "done", "");
+
+      expect(result.success).toBe(false);
+      expect(result.forbidden).toBe(true);
+      expect(result.message).toContain("agent is required");
     });
   });
 
@@ -227,28 +247,28 @@ describe("task lifecycle", () => {
     it("allows doing → review", async () => {
       await createTask(projectHubPath, { title: "SM review" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      const result = await completeTask(projectHubPath, "TASK-001", "review");
+      const result = await completeTask(projectHubPath, "TASK-001", "review", "claude-code");
       expect(result.success).toBe(true);
     });
 
     it("allows doing → done", async () => {
       await createTask(projectHubPath, { title: "SM done" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      const result = await completeTask(projectHubPath, "TASK-001", "done");
+      const result = await completeTask(projectHubPath, "TASK-001", "done", "claude-code");
       expect(result.success).toBe(true);
     });
 
     it("allows doing → blocked", async () => {
       await createTask(projectHubPath, { title: "SM blocked" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      const result = await completeTask(projectHubPath, "TASK-001", "blocked");
+      const result = await completeTask(projectHubPath, "TASK-001", "blocked", "claude-code");
       expect(result.success).toBe(true);
     });
 
     it("rejects done → doing", async () => {
       await createTask(projectHubPath, { title: "SM no regress" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      await completeTask(projectHubPath, "TASK-001", "done");
+      await completeTask(projectHubPath, "TASK-001", "done", "claude-code");
       const result = await completeTask(projectHubPath, "TASK-001", "doing");
       expect(result.success).toBe(false);
       expect(result.message).toContain("Invalid transition");
@@ -264,7 +284,7 @@ describe("task lifecycle", () => {
     it("allows blocked → ready", async () => {
       await createTask(projectHubPath, { title: "SM unblock" });
       await claimTask(projectHubPath, "TASK-001", "claude-code");
-      await completeTask(projectHubPath, "TASK-001", "blocked");
+      await completeTask(projectHubPath, "TASK-001", "blocked", "claude-code");
       const result = await completeTask(projectHubPath, "TASK-001", "ready");
       expect(result.success).toBe(true);
     });

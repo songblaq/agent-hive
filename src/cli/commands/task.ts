@@ -67,8 +67,9 @@ taskCommand
 
 taskCommand
   .command("complete <id>")
-  .description("Mark a task as done")
-  .option("-s, --status <status>", "Target status (done, review)", "done")
+  .description("Update task status after work (default: review for reviewer handoff)")
+  .option("-s, --status <status>", "Target status (done, review)", "review")
+  .option("-a, --agent <agent>", "Agent ID (must match lock holder while task is doing)", "claude-code")
   .option("--hub-path <path>", "Custom hub path")
   .action(async (id: string, options) => {
     requireHub(options.hubPath);
@@ -78,7 +79,7 @@ taskCommand
       process.exit(1);
     }
 
-    const result = await completeTask(project.hubProjectPath, id.toUpperCase(), options.status);
+    const result = await completeTask(project.hubProjectPath, id.toUpperCase(), options.status, options.agent);
 
     if (result.success) {
       console.log(`✓ ${result.message}`);

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readYaml, writeYaml } from "./yaml-utils.js";
 import { SYNC_DIR, SYNC_CONFIG_FILE, SYNC_ISSUE_MAP_FILE, SYNC_PR_MAP_FILE } from "./constants.js";
 import { createTask } from "./task-manager.js";
@@ -24,9 +24,9 @@ function prMapPath(projectHubPath: string): string {
   return join(syncDir(projectHubPath), SYNC_PR_MAP_FILE);
 }
 
-function runGh(args: string): string {
+function runGh(args: string[]): string {
   try {
-    return execSync(`gh ${args}`, { encoding: "utf-8", timeout: 30000 });
+    return execFileSync("gh", args, { encoding: "utf-8", timeout: 30000 });
   } catch (err) {
     throw new Error(`GitHub CLI failed: ${(err as Error).message}`);
   }
@@ -34,7 +34,7 @@ function runGh(args: string): string {
 
 function detectGitRepo(projectPath?: string): string | null {
   try {
-    const remote = execSync("git remote get-url origin", {
+    const remote = execFileSync("git", ["remote", "get-url", "origin"], {
       encoding: "utf-8",
       cwd: projectPath,
       timeout: 5000,
@@ -108,7 +108,7 @@ export async function importIssues(
 
   // Verify gh CLI is available
   try {
-    execSync("gh --version", { encoding: "utf-8", timeout: 5000 });
+    execFileSync("gh", ["--version"], { encoding: "utf-8", timeout: 5000 });
   } catch {
     throw new Error("GitHub CLI (gh) is not available. Install it from https://cli.github.com/");
   }
@@ -116,9 +116,18 @@ export async function importIssues(
   const state = options?.state ?? config.import.issues.filter.state ?? "open";
   const limit = options?.limit ?? 100;
 
-  const raw = runGh(
-    `issue list --repo ${config.repo} --json number,title,url,labels,state --state ${state} --limit ${limit}`,
-  );
+  const raw = runGh([
+    "issue",
+    "list",
+    "--repo",
+    config.repo,
+    "--json",
+    "number,title,url,labels,state",
+    "--state",
+    state,
+    "--limit",
+    String(limit),
+  ]);
 
   const issues: GhIssue[] = JSON.parse(raw);
 

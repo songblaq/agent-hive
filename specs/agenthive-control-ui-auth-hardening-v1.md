@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # AgentHive Control UI Auth Hardening v1
 
 Date: 2026-03-11

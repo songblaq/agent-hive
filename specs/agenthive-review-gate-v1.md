@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # AgentHive Review Gate v1
 
 - 작성일: 2026-03-11

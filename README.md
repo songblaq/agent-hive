@@ -442,20 +442,20 @@ Supported agent IDs (kebab-case convention): `claude-code`, `codex`, `cursor`, `
 |---------|-------------|
 | `agenthive project add <path>` | Register a project |
 | `agenthive project list` | List registered projects |
-| `agenthive project remove <slug>` | Unregister a project |
+| `agenthive project remove <slug>` | Unregister a project *(planned)* |
 
 ### Tasks (Hive)
 
 | Command | Description |
 |---------|-------------|
 | `agenthive task create <title>` | Create a task (`--priority high/medium/low`) |
-| `agenthive task list` | List tasks (`--status`, `--agent`, `--priority`) |
-| `agenthive task show <id>` | Show full task details |
+| `agenthive task list` | List tasks *(planned: `--status`, `--agent`, `--priority` filters)* |
+| `agenthive task show <id>` | Show full task details *(planned)* |
 | `agenthive task claim <id>` | Claim a task (`--agent <id>`, `--role builder`) |
-| `agenthive task complete <id>` | Move task to review |
-| `agenthive task approve <id>` | Approve reviewed task → done |
-| `agenthive task block <id>` | Mark task as blocked (`--reason`) |
-| `agenthive task unblock <id>` | Unblock a task |
+| `agenthive task complete <id>` | Set status after work (default: review; use `--status done` when appropriate) |
+| `agenthive task approve <id>` | Approve reviewed task → done *(planned)* |
+| `agenthive task block <id>` | Mark task as blocked (`--reason`) *(planned)* |
+| `agenthive task unblock <id>` | Unblock a task *(planned)* |
 
 ### Communication (Collab)
 
@@ -491,7 +491,7 @@ Supported agent IDs (kebab-case convention): `claude-code`, `codex`, `cursor`, `
 |---------|-------------|
 | `agenthive sync init` | Initialize GitHub sync (auto-detects remote) |
 | `agenthive sync import` | Import issues as task cards |
-| `agenthive sync push` | Push task status changes to GitHub |
+| `agenthive sync push` | Push task status changes to GitHub *(planned)* |
 | `agenthive sync status` | Show mapping and sync status |
 
 ---

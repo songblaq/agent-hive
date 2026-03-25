@@ -1,3 +1,8 @@
+---
+status: draft
+last-verified: "2026-03-25"
+---
+
 # AgentHive CLI 명령 초안
 
 작성일: 2026-03-09

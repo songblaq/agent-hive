@@ -1,5 +1,6 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { dirname, basename } from "node:path";
+import { readFile, writeFile, mkdir, rename, unlink } from "node:fs/promises";
+import process from "node:process";
+import { dirname, basename, join } from "node:path";
 import { parse, stringify } from "yaml";
 
 export class YamlValidationError extends Error {
@@ -64,7 +65,14 @@ export async function writeYaml<T>(filePath: string, data: T, validator?: Valida
 
   await mkdir(dirname(filePath), { recursive: true });
   const content = stringify(data, { lineWidth: 0 });
-  await writeFile(filePath, content, "utf-8");
+  const tmpPath = join(dirname(filePath), `.tmp.${process.pid}.${Date.now()}`);
+  try {
+    await writeFile(tmpPath, content, "utf-8");
+    await rename(tmpPath, filePath);
+  } catch (err) {
+    await unlink(tmpPath).catch(() => {});
+    throw err;
+  }
 }
 
 export interface ValidationError {

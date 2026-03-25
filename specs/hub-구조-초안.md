@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # AgentHive Hub 구조 초안
 
 작성일: 2026-03-09

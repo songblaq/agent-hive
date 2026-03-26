@@ -511,10 +511,12 @@ async function submitClaim() {
   loadProjectData();
 }
 
-async function changeStatus(taskId, status) {
+async function changeStatus(taskId, status, agent) {
+  const body = { task_id: taskId, status };
+  if (agent) body.agent = agent;
   const res = await api('/api/tasks/status?' + p(currentProject), {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ task_id: taskId, status })
+    body: JSON.stringify(body)
   });
   if (res.success) { toast(res.message); } else { toast(res.message, true); }
   loadProjectData();
@@ -528,9 +530,9 @@ function statusButtons(task) {
     if (s === 'backlog') html += '<button class="btn" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'ready\\')">Ready</button>';
   }
   if (s === 'doing') {
-    html += '<button class="btn" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'review\\')">To Review</button>';
-    html += '<button class="btn btn-primary" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'done\\')">Done</button>';
-    html += '<button class="btn btn-danger" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'blocked\\')">Block</button>';
+    html += '<button class="btn" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'review\\',\\'' + esc(task.owner || '') + '\\')">To Review</button>';
+    html += '<button class="btn btn-primary" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'done\\',\\'' + esc(task.owner || '') + '\\')">Done</button>';
+    html += '<button class="btn btn-danger" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'blocked\\',\\'' + esc(task.owner || '') + '\\')">Block</button>';
   }
   if (s === 'review') {
     html += '<button class="btn btn-primary" onclick="changeStatus(\\'' + esc(task.id) + '\\',\\'done\\')">Approve</button>';

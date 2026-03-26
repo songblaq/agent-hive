@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile, readFile, appendFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -126,6 +127,7 @@ export async function postMessage(
     refs: options.refs ?? [],
     tags: options.tags ?? [],
     reply_to: options.reply_to ?? null,
+    nonce: randomUUID().slice(0, 8),
   };
 
   const channelPath = join(projectHubPath, COLLAB_DIR, COLLAB_CHANNELS_DIR, `${channel}.jsonl`);

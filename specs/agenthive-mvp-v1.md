@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # AgentHive MVP v1 — Final Specification
 
 > **Status**: CONFIRMED — Ready for implementation  

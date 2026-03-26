@@ -8,8 +8,9 @@
  * 채널 매핑: collab/{project-slug}/{channel}.jsonl
  * 위치: ~/.aria/khala/channels/collab/
  */
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, writeFile, readFile, appendFile } from "node:fs/promises";
+import { mkdir, readFile, appendFile } from "node:fs/promises";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import type { CollabMessage, CollabMessageType } from "../models/collab.js";
@@ -40,11 +41,14 @@ const KHALA_TO_COLLAB_TYPE: Record<string, CollabMessageType> = {
   coordination: "proposal",
 };
 
-// === Khala 메시지 인터페이스 ===
-interface KhalaMessage {
+/**
+ * Khala JSONL 한 줄 스키마 (KHALA-COLLAB-CONTRACT §2–§4, §3.4 어댑터 필드 정렬).
+ * Collab 경로와 ORBIT `run_khala` 모두 동일한 코어 키를 사용한다.
+ */
+export interface KhalaMessage {
   id: string;
   channel: string;
-  from: { instance: string; agent: string };
+  from: { instance: string; agent: string } | string;
   to: { instance: string | null; agent: string | null };
   mention: string[];
   content: string;
@@ -55,6 +59,10 @@ interface KhalaMessage {
   correlation_id: string;
   timestamp: string;
   ttl: number;
+  /** 메시지 단위 중복 방지·추적 (레거시 줄에는 없을 수 있음) */
+  nonce?: string;
+  /** ORBIT은 task 컨텍스트 객체; Collab 줄은 `null` */
+  context?: Record<string, unknown> | null;
   _collab?: {
     original_type: string;
     tags: string[];
@@ -71,6 +79,7 @@ export function collabToKhala(
   projectSlug: string,
   channel: string,
 ): KhalaMessage {
+  const nonce = msg.nonce ?? randomUUID().slice(0, 8);
   return {
     id: msg.id,
     channel: `collab/${projectSlug}/${channel}`,
@@ -83,8 +92,10 @@ export function collabToKhala(
     reply_to: msg.reply_to,
     artifacts: msg.refs,
     correlation_id: `collab-${projectSlug}-${channel}`,
+    context: null,
     timestamp: msg.ts,
     ttl: 86400,
+    nonce,
     _collab: {
       original_type: msg.type,
       tags: msg.tags,
@@ -110,6 +121,7 @@ export function khalaToCollab(msg: KhalaMessage): CollabMessage {
     refs: collab?.refs ?? msg.artifacts ?? [],
     tags: collab?.tags ?? [],
     reply_to: msg.reply_to ?? null,
+    ...(msg.nonce != null && msg.nonce !== "" ? { nonce: msg.nonce } : {}),
   };
 }
 
@@ -147,6 +159,7 @@ export async function khalaPostMessage(
     refs: options.refs ?? [],
     tags: options.tags ?? [],
     reply_to: options.reply_to ?? null,
+    nonce: randomUUID().slice(0, 8),
   };
 
   const khalaMsg = collabToKhala(collabMsg, projectSlug, channel);

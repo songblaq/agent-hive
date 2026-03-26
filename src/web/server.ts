@@ -1,5 +1,7 @@
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { timingSafeEqual } from "node:crypto";
 import { DEFAULT_HUB_PATH, REGISTRY_FILE, PROJECTS_DIR } from "../core/constants.js";
 import { readYaml } from "../core/yaml-utils.js";
 import { createTask, claimTask, completeTask, listTasks } from "../core/task-manager.js";
@@ -15,6 +17,38 @@ import { existsSync } from "node:fs";
 import { dashboardHtml } from "./dashboard.js";
 
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
+
+const MUTATION_API_TOKEN = (process.env.AGENTHIVE_API_TOKEN ?? "").trim();
+
+const AGENTHIVE_LOG_JSON =
+  (process.env.AGENTHIVE_LOG_FORMAT ?? "").trim().toLowerCase() === "json";
+
+function maskHomeInPath(p: string): string {
+  const home = homedir();
+  if (!p || !home) return p;
+  if (p === home) return "~";
+  if (p.startsWith(home + "/") || p.startsWith(home + "\\")) {
+    return "~" + p.slice(home.length);
+  }
+  return p;
+}
+
+function requireMutationAuth(req: IncomingMessage, res: ServerResponse, corsOrigin: string): boolean {
+  if (!MUTATION_API_TOKEN) return true;
+  const raw = (req.headers.authorization ?? "").trim();
+  if (!raw.toLowerCase().startsWith("bearer ")) {
+    json(res, 401, { error: "Unauthorized" }, corsOrigin);
+    return false;
+  }
+  const token = raw.slice(7).trim();
+  const a = Buffer.from(token, "utf8");
+  const b = Buffer.from(MUTATION_API_TOKEN, "utf8");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    json(res, 403, { error: "Forbidden" }, corsOrigin);
+    return false;
+  }
+  return true;
+}
 
 async function parseBody(req: IncomingMessage): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
@@ -70,7 +104,7 @@ async function getProjects(hubPath: string) {
     for (const t of tasks) {
       taskCounts[t.status] = (taskCounts[t.status] || 0) + 1;
     }
-    projects.push({ slug: entry.slug, name: entry.name, description, path: entry.path, active: entry.active, activeAgents, taskCounts });
+    projects.push({ slug: entry.slug, name: entry.name, description, path: maskHomeInPath(entry.path), active: entry.active, activeAgents, taskCounts });
   }
   return projects;
 }
@@ -114,24 +148,44 @@ async function getThreads(hubPath: string, slug: string) {
   return threads;
 }
 
-export function startServer(port: number, hubPath?: string, defaultProject?: string): void {
+export function startServer(port: number, hubPath?: string, defaultProject?: string): Server {
+  if (!process.env.AGENTHIVE_API_TOKEN) {
+    console.warn("[WARN] AGENTHIVE_API_TOKEN not set — mutation APIs are unprotected");
+  }
   const hub = hubPath ?? DEFAULT_HUB_PATH;
   const origin = `http://localhost:${port}`;
 
   const server = createServer(async (req, res) => {
+    const reqStart = Date.now();
+    const url = new URL(req.url ?? "/", `http://localhost:${port}`);
+    const projectParam = url.searchParams.get("project") ?? "";
+    if (AGENTHIVE_LOG_JSON) {
+      res.once("finish", () => {
+        console.log(
+          JSON.stringify({
+            ts: new Date().toISOString(),
+            method: req.method ?? "GET",
+            path: url.pathname,
+            project: projectParam,
+            status: res.statusCode,
+            duration_ms: Date.now() - reqStart,
+          }),
+        );
+      });
+    }
+
     // CORS preflight
     if (req.method === "OPTIONS") {
       res.writeHead(204, {
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       });
       res.end();
       return;
     }
 
-    const url = new URL(req.url ?? "/", `http://localhost:${port}`);
-    const slug = url.searchParams.get("project") ?? "";
+    const slug = projectParam;
     if (slug && !validateSlug(slug, hub)) {
       json(res, 400, { error: "Invalid project slug" }, origin);
       return;
@@ -185,6 +239,8 @@ export function startServer(port: number, hubPath?: string, defaultProject?: str
         json(res, 200, { version: config.version, display_language: config.display_language }, origin);
 
       // === MUTATION APIs ===
+      } else if (req.method === "POST" && url.pathname.startsWith("/api/") && !requireMutationAuth(req, res, origin)) {
+        return;
       } else if (req.method === "POST" && url.pathname === "/api/tasks/create") {
         const body = await parseBody(req);
         if (!slug) { json(res, 400, { error: "project required" }, origin); return; }
@@ -216,8 +272,10 @@ export function startServer(port: number, hubPath?: string, defaultProject?: str
           projectHubPath,
           String(body.task_id || ""),
           (body.status as any) || "done",
+          String(body.agent ?? ""),
         );
-        json(res, result.success ? 200 : 400, result, origin);
+        const status = result.success ? 200 : result.forbidden ? 403 : 400;
+        json(res, status, result, origin);
 
       } else if (req.method === "POST" && url.pathname === "/api/projects/add") {
         const body = await parseBody(req);
@@ -271,10 +329,13 @@ export function startServer(port: number, hubPath?: string, defaultProject?: str
   });
 
   server.listen(port, "127.0.0.1", () => {
+    const addr = server.address();
+    const displayPort = typeof addr === "object" && addr ? addr.port : port;
     console.log(`\n  AgentHive Dashboard`);
-    console.log(`  http://localhost:${port}\n`);
+    console.log(`  http://localhost:${displayPort}\n`);
     console.log(`  Hub: ${hub}`);
     if (defaultProject) console.log(`  Project: ${defaultProject}`);
     console.log(`  Press Ctrl+C to stop\n`);
   });
+  return server;
 }

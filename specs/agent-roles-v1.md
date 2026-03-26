@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # Agent Roles & Groups v1
 
 ## 1. Overview

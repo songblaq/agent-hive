@@ -1,3 +1,8 @@
+---
+status: draft
+last-verified: "2026-03-25"
+---
+
 # AgentHive GitHub Issue Autopilot v1
 
 - 작성일: 2026-03-11

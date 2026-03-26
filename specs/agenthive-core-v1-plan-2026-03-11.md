@@ -1,3 +1,8 @@
+---
+status: implemented
+last-verified: "2026-03-25"
+---
+
 # AgentHive Core v1 Integrated Plan
 
 - 작성일: 2026-03-11

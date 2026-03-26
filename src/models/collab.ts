@@ -30,6 +30,8 @@ export interface CollabMessage {
   refs: string[];
   tags: string[];
   reply_to: string | null;
+  /** Short dedup / correlation token for JSONL consumers (Khala contract alignment). */
+  nonce?: string;
 }
 
 export interface CollabChannel {

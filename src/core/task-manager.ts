@@ -248,11 +248,24 @@ export async function claimTask(
   };
 }
 
+export interface CompleteTaskResult {
+  success: boolean;
+  message: string;
+  /** Set when the caller is not allowed to complete (e.g. not the lock holder). */
+  forbidden?: boolean;
+}
+
+function isLockLeaseActive(lock: Lock): boolean {
+  if (!lock.lease_until) return true;
+  return new Date(lock.lease_until) >= new Date();
+}
+
 export async function completeTask(
   hubProjectPath: string,
   taskId: string,
   targetStatus: TaskStatus = "done",
-): Promise<{ success: boolean; message: string }> {
+  agent = "",
+): Promise<CompleteTaskResult> {
   const tasksDir = join(hubProjectPath, TASKS_DIR);
   const taskDir = await findTaskDir(tasksDir, taskId);
   if (!taskDir) {
@@ -260,6 +273,49 @@ export async function completeTask(
   }
 
   const task = await readYaml<Task>(join(taskDir, TASK_YAML), validateTask);
+
+  if (task.status === "doing") {
+    const lockPath = join(taskDir, LOCK_YAML);
+    if (!existsSync(lockPath)) {
+      return {
+        success: false,
+        forbidden: true,
+        message: `Task ${taskId} has no active lock; only the lock holder may change status`,
+      };
+    }
+    let lock: Lock;
+    try {
+      lock = await readYaml<Lock>(lockPath);
+    } catch {
+      return {
+        success: false,
+        forbidden: true,
+        message: `Task ${taskId}: cannot read lock`,
+      };
+    }
+    if (!isLockLeaseActive(lock)) {
+      return {
+        success: false,
+        forbidden: true,
+        message: `Task ${taskId}: lock lease expired`,
+      };
+    }
+    const who = agent.trim();
+    if (!who) {
+      return {
+        success: false,
+        forbidden: true,
+        message: "agent is required to complete a claimed task",
+      };
+    }
+    if (lock.agent !== who) {
+      return {
+        success: false,
+        forbidden: true,
+        message: `Task ${taskId} is locked by ${lock.agent}`,
+      };
+    }
+  }
 
   // Enforce state machine transitions
   if (!isValidTransition(task.status, targetStatus)) {
